@@ -24,14 +24,14 @@ Upload everything to a web server and open the app.html in a browser.
 
 ### Licenses
 
-This script uses the Google+™ API. (https://developers.google.com/+/)
+This script uses the Google+â„¢ API. (https://developers.google.com/+/)
 
 Google+ is a trademark of Google Inc. Use of this trademark is subject to Google Permissions. (http://www.google.com/permissions/index.html)
 
 I'm not affiliated with, sponsored by, or endorsed by Google Inc. (http://www.google.com/)
 
 ```
-Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U., https://plus.google.com/112336147904981294875, http://www.foldedsoft.at/
+Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U., http://www.foldedsoft.at/
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
