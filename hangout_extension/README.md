@@ -34,14 +34,14 @@ Save and you are ready to "Enter a hangout!" :)
 
 ### Licenses
 
-This script uses the Google+™ Hangouts API. (https://developers.google.com/+/hangouts/)
+This script uses the Google+ï¿½ Hangouts API. (https://developers.google.com/+/hangouts/)
 
 Google+ is a trademark of Google Inc. Use of this trademark is subject to Google Permissions. (http://www.google.com/permissions/index.html)
 
 I'm not affiliated with, sponsored by, or endorsed by Google Inc. (http://www.google.com/)
 
 ```
-Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U., https://plus.google.com/112336147904981294875, http://www.foldedsoft.at/
+Copyright 2012-2013 Gerwin Sturm, FoldedSoft e.U., http://www.foldedsoft.at/
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
