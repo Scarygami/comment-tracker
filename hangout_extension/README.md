@@ -34,7 +34,7 @@ Save and you are ready to "Enter a hangout!" :)
 
 ### Licenses
 
-This script uses the Google+� Hangouts API. (https://developers.google.com/+/hangouts/)
+This script uses the Google+ Hangouts API. (https://developers.google.com/+/hangouts/)
 
 Google+ is a trademark of Google Inc. Use of this trademark is subject to Google Permissions. (http://www.google.com/permissions/index.html)
 
