@@ -1,0 +1,30 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/hangout-app/hangout-app.html">
+<link rel="import" href="comment-tracker.html">
+
+<polymer-element name="hangout-comment-tracker" extends="hangout-app" attributes="apikey ytapikey">
+
+  <template>
+    <style>
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        margin: 0; padding: 0;
+        box-sizing: border-box;
+        min-height: 100%;
+      }
+    </style>
+    <template if="{{ loaded }}">
+      <comment-tracker apikey="{{apikey}}" ytapikey="{{ytapikey}}"></comment-tracker>
+    </template>
+  </template>
+
+  <script>
+    Polymer('hangout-comment-tracker', {
+      apikey: '',
+      ytapikey: ''
+    });
+  </script>
+
+</polymer-element>

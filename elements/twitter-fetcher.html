@@ -1,0 +1,173 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<polymer-element name="twitter-fetcher"
+                 attributes="widget response max links retweets">
+  <script>
+
+    /*********************************************************************
+    *  #### Twitter Post Fetcher v9.0 ####
+    *  Coded by Jason Mayes 2013. A present to all the developers out there.
+    *  www.jasonmayes.com
+    *  Please keep this disclaimer with my code if you use it. Thanks. :-)
+    *  Got feedback or questions, ask here:
+    *  http://www.jasonmayes.com/projects/twitterApi/
+    *  Updates will be posted to this site.
+    *
+    *  Adapted by Gerwin Sturm
+    *********************************************************************/
+
+    (function (global) {
+      var twitterFetcher;
+
+      function strip(data) {
+        return data.replace(/<b[^>]*>(.*?)<\/b>/gi, function(a,s){return s;})
+            .replace(/class=".*?"|data-query-source=".*?"|dir=".*?"|rel=".*?"/gi, '');
+      }
+
+      function parseAuthorData(authorNode) {
+        var data = {}, tmp;
+
+        tmp = authorNode.getElementsByClassName('avatar');
+        if (tmp.length > 0) {
+          data.image = tmp[0].getAttribute('src');
+        }
+
+        tmp = authorNode.getElementsByClassName('p-name');
+        if (tmp.length > 0) {
+          if (tmp[0].innerText) {
+            data.name = tmp[0].innerText;
+          } else {
+            data.name = tmp[0].textContent;
+          }
+        }
+
+        tmp = authorNode.getElementsByClassName('p-nickname');
+        if (tmp.length > 0) {
+          if (tmp[0].innerText) {
+            data.nickname = tmp[0].innerText;
+          } else {
+            data.nickname = tmp[0].textContent;
+          }
+        }
+
+        if (data.nickname) {
+          data.url = "https://www.twitter.com/" + data.nickname.substring(1);
+        }
+
+        return data;
+      }
+
+      function parseWidgetData(node) {
+        var tmp;
+        tmp = node.getElementsByClassName('summary');
+        if (tmp.length > 0) {
+          tmp = tmp[0].getElementsByTagName('a');
+          if (tmp.length > 0) {
+            return {'url': tmp[0].href, 'title': tmp[0].getAttribute('title')};
+          }
+        }
+      }
+
+      Polymer('twitter-fetcher', {
+        max: 20,
+        links: true,
+        retweets: false,
+
+        ready: function () {
+          twitterFetcher = this;
+        },
+
+        go: function () {
+          var script, callback, callback_id = (new Date()).getTime();
+          while (!callback) {
+            if (!global['twitter_fetcher_callback_' + callback_id]) {
+              callback = 'twitter_fetcher_callback_' + callback_id;
+            } else {
+              callback_id++;
+            }
+          }
+
+          global[callback] = this.callback.bind(this);
+
+          script = global.document.createElement('script');
+          script.type = 'text/javascript';
+
+          script.src =
+            'https://cdn.syndication.twimg.com/widgets/timelines/' +
+            this.widget +
+            '?&lang=en&callback=' + callback +
+            '&suppress_response_codes=true&rnd=' + Math.random();
+          global.document.head.appendChild(script);
+        },
+
+        callback: function (data) {
+          if (!data || !data.body) {
+            twitterFetcher.response = null;
+            twitterFetcher.fire('twitter-fetcher-response', null);
+            return;
+          }
+
+          var div = document.createElement('div');
+          div.innerHTML = data.body;
+
+          var json = [];
+          var tweets = [];
+          var authors = [];
+          var times = [];
+          var rts = [];
+          var x = 0;
+          var widgetdata = parseWidgetData(div);
+          var maxTweets = twitterFetcher.max || 20;
+
+          var tmp = div.getElementsByClassName('tweet');
+          while (x < tmp.length) {
+            if (tmp[x].getElementsByClassName('retweet-credit').length > 0) {
+              rts.push(true);
+            } else {
+              rts.push(false);
+            }
+            if (!rts[x] || rts[x] && twitterFetcher.retweets) {
+              tweets.push(tmp[x].getElementsByClassName('e-entry-title')[0]);
+              authors.push(tmp[x].getElementsByClassName('p-author')[0]);
+              times.push(tmp[x].getElementsByClassName('dt-updated')[0]);
+              json.push({'id' : tmp[x].getAttribute('data-tweet-id')});
+            }
+            x++;
+          }
+
+          if (tweets.length > maxTweets) {
+            tweets.splice(maxTweets, (tweets.length - maxTweets));
+            authors.splice(maxTweets, (authors.length - maxTweets));
+            times.splice(maxTweets, (times.length - maxTweets));
+            json.splice(maxTweets, (json.length - maxTweets));
+            rts.splice(maxTweets, (rts.length - maxTweets));
+          }
+
+          var arrayTweets = [];
+          x = tweets.length;
+          var n = 0;
+          while(n < x) {
+            var newDate = new Date(times[n].getAttribute('datetime'));
+            json[n].datetime = newDate;
+            json[n].author = parseAuthorData(authors[n]);
+            if (json[n].id && json[n].author.url) {
+              json[n].url = json[n].author.url + '/statuses/' + json[n].id;
+            }
+            if (twitterFetcher.links) {
+              json[n].tweet = strip(tweets[n].innerHTML);
+            } else {
+              json[n].tweet = tweets[n].textContent;
+            }
+            n++;
+          }
+
+          twitterFetcher.response = {
+            tweets: json,
+            widget: widgetdata
+          };
+          twitterFetcher.fire('twitter-fetcher-response', twitterFetcher.response);
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>

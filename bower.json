@@ -1,0 +1,27 @@
+{
+  "name": "comment-tracker",
+  "version": "0.0.1",
+  "authors": [
+    "Gerwin Sturm <scarygami@gmail.com>"
+  ],
+  "main": "comment-tracker.html",
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "platform": "Polymer/platform#master",
+    "core-ajax": "Polymer/core-ajax#master",
+    "core-pages": "Polymer/core-pages#master",
+    "core-localstorage": "Polymer/core-localstorage#master",
+    "core-style": "Polymer/core-style#master",
+    "core-tooltip": "Polymer/core-tooltip#master",
+    "paper-elements": "Polymer/paper-elements#master",
+    "paper-item": "Polymer/paper-item#master",
+    "hangout-app": "Scarygami/hangout-app#master"
+  }
+}

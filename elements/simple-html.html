@@ -1,0 +1,101 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<polymer-element name="simple-html" attributes="text shorten">
+  <template>
+    <style>
+      a {
+        text-decoration: none;
+      }
+
+      a:hover, a:active {
+        text-decoration: underline;
+      }
+    </style>
+    <template repeat="{{part in parts}}">
+      <template if="{{part.link}}">
+        <a href="{{part.link}}" target="_blank">{{part.text}}</a>
+      </template>
+      <template if="{{!part.link}}">
+        {{ part.text }}<template if="{{part.linebreak}}"><br></template>
+      </template>
+    </template>
+  </template>
+
+  <script>
+    (function (global) {
+      var max = 255;
+
+      function strip(data) {
+        var div;
+        div = global.document.createElement('div');
+        div.innerHTML = data;
+        return div.textContent;
+      }
+
+      function split(data, shorten) {
+        var result, tmp, i, j, tmp2, a, l;
+        data = data.replace(/<br\s+?\/?>/gi, '\n');
+        tmp2 = data;
+        tmp = [];
+        j = tmp2.indexOf('<a');
+        while (j >= 0) {
+          tmp.push({'text': strip(tmp2.substring(0, j))});
+          tmp2 = tmp2.substring(j);
+          j = tmp2.indexOf('</a>');
+          a = tmp2.substring(0, j + 4);
+          tmp.push({
+            'link': strip((/href="(.*?)"/).exec(a)[1]),
+            'text': strip(a).replace(/\n/g, '')
+          });
+          tmp2 = tmp2.substring(j + 4);
+          j = tmp2.indexOf('<a');
+        }
+        tmp.push({'text': strip(tmp2)});
+
+        result = [];
+        l = 0;
+        for (i = 0; i < tmp.length; i++) {
+          if (tmp[i].link) {
+            if (shorten) { l += tmp[i].text.length; }
+            result.push(tmp[i]);
+            if (shorten & l >= max) { break; }
+          } else {
+            if (shorten) {
+              tmp[i].text = tmp[i].text.replace(/\n+/g, '\n');
+            }
+            tmp2 = tmp[i].text.split('\n');
+            for (j = 0; j < tmp2.length; j++) {
+              if (shorten) {
+                if (l + tmp2[j].length >= max) {
+                  tmp2[j] = tmp2[j].substring(0, max - l) + '...';
+                }
+                l += tmp2[j].length;
+                result.push({'text': tmp2[j], 'linebreak': (j < tmp2.length - 1) && (l < max)});
+              } else {
+                result.push({'text': tmp2[j], 'linebreak': (j < tmp2.length - 1)});
+              }
+              if (shorten & l >= max) { break; }
+            }
+            if (shorten & l >= max) { break; }
+          }
+        }
+        return result;
+      }
+
+      Polymer('simple-html', {
+        shorten: false,
+        shortenChanged: function () {
+          this.textChanged();
+        },
+        textChanged: function () {
+          // prepare content
+          var tmp, i;
+          this.parts = [];
+          if (this.text) {
+            this.parts = split(this.text, this.shorten);
+          }
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>

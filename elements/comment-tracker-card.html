@@ -1,0 +1,72 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<polymer-element name="comment-tracker-card"
+                 attributes="col actions hiddenActions colours pinned">
+  <template>
+    <link no-shim href="../bower_components/paper-shadow/paper-shadow.css" rel="stylesheet">
+
+    <style>
+
+      * { box-sizing: border-box; padding: 0;}
+
+      :host {
+        display: block;
+        width: 100%;
+      }
+
+      .card {
+        width: 100%;
+        margin: 8px 0;
+      }
+
+      .card-inner {
+        padding: 8px;
+        width: 100%;
+        border-top: {{ colours ? '5' : '0' }}px solid {{col}};
+        border-radius: 2px;
+        word-wrap: break-word
+      }
+
+      .actions.invisible paper-icon-button {
+        height: 0;
+        overflow: hidden;
+        transition: height 0.2s ease-out;
+      }
+
+      .card:hover .actions.invisible paper-icon-button {
+        height: 40px;
+      }
+
+    </style>
+
+    <div class="card paper-shadow-top paper-shadow-top-z-{{pinned ? '3' : '1'}}">
+      <div class="card-inner paper-shadow-bottom paper-shadow-bottom-z-{{pinned ? '3' : '1'}}">
+        <content></content>
+        <div class="actions {{hiddenActions ? 'invisible' : ''}}" layout horizontal center end-justified>
+          <template repeat="{{action in actions}}">
+            <paper-icon-button
+              icon="{{action.icon}}"
+              data-action="{{action.action}}"
+              on-tap="{{performAction}}"
+              aria-label="{{action.title}}"
+              title="{{action.title}}"
+              style="color: {{action.color || '#999'}};"></paper-icon-button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    (function (global) {
+      Polymer('comment-tracker-card', {
+        col: 'blue',
+        performAction: function (e) {
+          this.fire('comment-tracker-action', e.target.dataset.action);
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>
+

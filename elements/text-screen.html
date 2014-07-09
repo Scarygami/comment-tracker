@@ -1,0 +1,293 @@
+<!--
+ Copyright (c) 2012 Allen "Prisoner" Firstenberg / prisoner.com
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License
+
+
+ Adapted by Gerwin Sturm
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<polymer-element name="text-screen" attributes="text img">
+  <template>
+    <canvas id="backgroundCanvas" width="640" height="360" style="display: none;"></canvas>
+    <canvas id="textScreenCanvas" width="640" height="360" style="display: none;"></canvas>
+    <span id="textScreenWork"></span>
+  </template>
+  <script>
+    (function (global) {
+      var
+        max = 255,
+        width = 640,
+        height = 360,
+        TextCanvas;
+
+      TextCanvas = (function() {
+
+        function TextCanvas(canvas, work) {
+          this.whitespaceRE = new RegExp(' +');
+          this.newlineRE = new RegExp("\\s*[\n\r]+\\s*", "gm");
+          this.minSize = 1;
+          this.canvas = canvas;
+          this.context = this.canvas.getContext('2d');
+          this.work = work;
+          this.work.innerHTML = '&nbsp';
+          this.textValue = '';
+          this.recomputeMetrics();
+        }
+
+        TextCanvas.prototype.recomputeMetrics = function() {
+          var font, fontFamily, fontSize, textAlign, _ref;
+          this.width = this.canvas.width;
+          this.height = this.canvas.height;
+          this.lineHeight = this.work.offsetHeight;
+          this.context.fillStyle = 'black';
+          this.context.strokeStyle = 'black';
+          this.context.lineWidth = 0.5;
+          font = this.work.style.font;
+          fontSize = this.work.style.fontSize;
+          fontFamily = this.work.style.fontFamily;
+          if (font === '' || !(font != null)) {
+            font = "" + fontSize + " " + fontFamily;
+          }
+          this.context.font = font != null ? font : '12px Arial';
+          textAlign = this.work.style.textAlign || 'center';
+          this.context.textAlign = textAlign;
+        };
+
+        TextCanvas.prototype.redraw = function() {
+          var co, currentLine, line, lineWidth, lines, newline, testLine, word, words, x, y, _i, _j, _len, _len1, font;
+          lines = [];
+          co = 0;
+          words = this.textValue.split(this.whitespaceRE);
+          currentLine = '';
+          for (_i = 0, _len = words.length; _i < _len; _i++) {
+            word = words[_i];
+            testLine = currentLine.length === 0 ? word : currentLine + ' ' + word;
+            lineWidth = (this.context.measureText(testLine)).width;
+            newline = false;
+            if (word === '\n') {
+              newline = true;
+              word = '';
+            }
+            if (lineWidth > this.width || newline) {
+              lines[co] = currentLine;
+              co++;
+              currentLine = word;
+            } else {
+              currentLine = testLine;
+            }
+          }
+          lines[co] = currentLine;
+          this.overflow = false;
+          this.context.clearRect(0, 0, this.width, this.height);
+          y = (function() {
+            switch (this.work.style.verticalAlign) {
+              case 'baseline':
+              case 'bottom':
+              case 'text-bottom':
+                return this.height - this.lineHeight * (lines.length);
+              case 'middle':
+                return (this.height / 2) - (this.lineHeight * (lines.length)) / 2;
+              default:
+                return this.lineHeight;
+            }
+          }).call(this);
+          this.overflow = this.overflow || (y < this.lineHeight);
+          for (_j = 0, _len1 = lines.length; _j < _len1; _j++) {
+            line = lines[_j];
+            x = (function() {
+              switch (this.context.textAlign) {
+                case 'center':
+                  return this.width / 2;
+                case 'right':
+                  return this.width;
+                default:
+                  return 0;
+              }
+            }).call(this);
+            if (_j === 0) {
+              font = this.context.font;
+              this.context.font = "bold " + font;
+            }
+            this.context.fillText(line, x, y);
+            this.context.strokeText(line, x, y);
+            if (_j === 0) {
+              this.context.font = font;
+              y += this.lineHeight;
+            }
+            y += this.lineHeight;
+          }
+          this.overflow = this.overflow || (y - this.lineHeight > this.height);
+        };
+
+        TextCanvas.prototype.style = function(property, value) {
+          if (!(value != null)) {
+            return this.work.style[property];
+          }
+          this.work.style[property] = value;
+          this.recomputeMetrics();
+          this.redraw();
+        };
+
+        TextCanvas.prototype.adjustFontSizeDown = function(size) {
+          while (this.overflow && size >= this.minSize) {
+            size--;
+            this.style('fontSize', "" + size + "px");
+          }
+          return size;
+        };
+
+        TextCanvas.prototype.adjustFontSizeUp = function(size) {
+          while (!this.overflow) {
+            size++;
+            this.style('fontSize', "" + size + "px");
+          }
+          size = this.adjustFontSizeDown(size);
+          return size;
+        };
+
+        TextCanvas.prototype.adjustFontSize = function(size) {
+          var sizestr, sizeval;
+          if (!(size != null) || size < this.minSize) {
+            sizestr = this.style('fontSize');
+            sizeval = sizestr.substring(0, sizestr.length - 2);
+            size = parseInt(sizeval, 10) || 12;
+          }
+          size = this.adjustFontSizeDown(size);
+          size = this.adjustFontSizeUp(size);
+          return size;
+        };
+
+        TextCanvas.prototype.text = function(textValue) {
+          this.textValue = textValue.replace(this.newlineRE, ' \n ');
+          this.adjustFontSize(0);
+        };
+
+        return TextCanvas;
+
+      })();
+
+      Polymer('text-screen', {
+        ready: function () {
+          if (!global.gapi || !global.gapi.hangout) { return; }
+          this.textCanvas = new TextCanvas(this.$.textScreenCanvas, this.$.textScreenWork);
+          this.setBackground();
+          this.setFont('Roboto Condensed');
+          this.setTextAlign('left');
+          this.setVerticalAlign('middle');
+          this.showing = false;
+        },
+        show: function () {
+          var imgUrl, scale, img;
+
+          if (!global.gapi || !global.gapi.hangout) { return; }
+
+          if (this.showing) {
+            this.hide();
+          }
+          this.bigOverlay.setVisible(true);
+          global.gapi.hangout.av.setLocalParticipantVideoMirrored(false);
+          this.textCanvas.text(this.text);
+          scale = 0.5;
+          imgUrl = this.textCanvas.canvas.toDataURL('image/png');
+          this.smallImage = global.gapi.hangout.av.effects.createImageResource(imgUrl);
+          this.smallOverlay = this.smallImage.showOverlay({
+            position: {
+              x: 0,
+              y: 0
+            }
+          });
+          this.smallOverlay.setScale(scale, global.gapi.hangout.av.effects.ScaleReference.WIDTH);
+          if (this.img) {
+            img = this.img;
+            if (img.indexOf("?sz=") >= 0) {
+              img = img + "&sz=255";
+            }
+            this.authorImage = global.gapi.hangout.av.effects.createImageResource(img);
+            this.authorOverlay = this.authorImage.showOverlay({
+              position: {
+                x: -0.4,
+                y: -0.3
+              },
+              scale: {
+                magnitude: 0.15,
+                reference: global.gapi.hangout.av.effects.ScaleReference.WIDTH
+              }
+            });
+          }
+          this.showing = true;
+        },
+        hide: function () {
+          if (!global.gapi || !global.gapi.hangout) { return; }
+
+          if (this.showing) {
+            if (this.bigOverlay != null) {
+              this.bigOverlay.setVisible(false);
+            }
+            if (this.smallOverlay != null) {
+              this.smallOverlay.setVisible(false);
+              this.smallOverlay = void 0;
+              this.smallImage.dispose();
+              this.smallImage = void 0;
+            }
+            if (this.authorOverlay != null) {
+              this.authorOverlay.setVisible(false);
+              this.authorOverlay = void 0;
+              this.authorImage.dispose();
+              this.authorImage = void 0;
+            }
+            global.gapi.hangout.av.setLocalParticipantVideoMirrored(true);
+          }
+          this.showing = false;
+        },
+        setBackground: function (bg1, bg2) {
+          var canvas, context, imageResource, imageUrl, grd;
+
+          if (!global.gapi || !global.gapi.hangout) { return; }
+
+          canvas = this.$.backgroundCanvas;
+          context = canvas.getContext('2d');
+          if (!!context.createLinearGradient) {
+            grd = context.createLinearGradient(0, -50, canvas.width, canvas.height + 50);
+            grd.addColorStop(0, bg2 || "#CCC");
+            grd.addColorStop(0.5, bg1 || "#EEE");
+            grd.addColorStop(1, bg2 || "#CCC");
+            context.fillStyle = grd;
+          } else {
+            context.fillStyle = bg1 || "#EEE";
+          }
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          imageUrl = canvas.toDataURL('image/png');
+          imageResource = global.gapi.hangout.av.effects.createImageResource(imageUrl);
+          this.bigOverlay = imageResource.createOverlay({
+            position: {
+              x: 0,
+              y: 0
+            }
+          });
+        },
+        setFont: function( font) {
+          this.textCanvas.style('fontFamily', font);
+        },
+        setTextAlign: function( align) {
+          this.textCanvas.style('textAlign', align);
+        },
+        setVerticalAlign: function( align) {
+          this.textCanvas.style('verticalAlign', align);
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>

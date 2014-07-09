@@ -1,0 +1,292 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="comment-tracker-card.html">
+<link rel="import" href="simple-html.html">
+
+<polymer-element name="comment-tracker-entry"
+                 attributes="type data col pinned shorten showing entryid hiddenActions hiddenEntries colours">
+  <template>
+    <link no-shim href="../bower_components/paper-shadow/paper-shadow.css" rel="stylesheet">
+
+    <style>
+
+      * { box-sizing: border-box; padding: 0;}
+
+      :host {
+        display: block;
+        width: 100%;
+      }
+
+      .profile {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      a:hover, a:active {
+        text-decoration: underline;
+      }
+
+      .annotation {
+        border-bottom: 1px solid #999;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+      }
+
+      .content {
+        margin-top: 8px;
+      }
+
+    </style>
+
+    <template if="{{!deleted || hiddenEntries}}">
+      <comment-tracker-card col="{{col}}"
+                            hiddenActions="{{hiddenActions}}"
+                            colours="{{colours}}"
+                            actions="{{actions}}"
+                            pinned="{{pinned}}"
+                            on-comment-tracker-action="{{performAction}}">
+        <div layout horizontal center>
+          <img src="{{img}}" class="profile">
+          <div flex><b>{{author}}</b><br>{{formattedDate}}</div>
+          <a href="{{url}}" target="_blank" self-start><img src="{{service}}"></a>
+        </div>
+        <div class="content">
+          <template if="{{data.annotation}}">
+            <div class="annotation">
+              <simple-html text="{{data.annotation}}" shorten="{{shorten}}"></simple-html>
+            </div>
+          </template>
+          <simple-html text="{{content}}" shorten="{{shorten}}"></simple-html>
+        </div>
+      </comment-tracker-card>
+    </template>
+  </template>
+
+  <script>
+    (function (global) {
+      var hangout = false;
+
+      function formatDate(date) {
+        var y, m, d, h, min, now, tmp;
+        now = new Date();
+        y = date.getFullYear().toString();
+        m = (date.getMonth() + 1).toString();
+        d = date.getDate().toString();
+        h = date.getHours().toString();
+        min = date.getMinutes().toString();
+
+        tmp = '';
+        if (date.getFullYear() !== now.getFullYear() || date.getMonth() !== now.getMonth() || date.getDate() !== now.getDate()) {
+          tmp = y + '-' + (m[1] ? m : '0' + m[0]) + '-' + (d[1] ? d : '0' + d[0]) + ' ';
+        }
+        tmp += (h[1] ? h : '0' + h[0]) + ':' + (min[1] ? min : '0' + min[0]);
+
+        return tmp;
+      }
+
+      function strip(html) {
+        var tmp = global.document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText;
+      }
+
+      Polymer('comment-tracker-entry', {
+        text: '',
+        author: '',
+        col: 'blue',
+        deleted: false,
+        added: false,
+        pinned: false,
+        showing: false,
+        shorten: false,
+        actions: [],
+        performAction: function (e, detail) {
+          var id;
+          switch (detail) {
+            case 'delete':
+              this.deleted = true;
+              return;
+            case 'undelete':
+              this.deleted = false;
+              return;
+            case 'pin':
+              this.pinned = !this.pinned;
+              this.fire('comment-tracker-update');
+              return;
+            case 'add':
+              if (this.type == 'person' || this.type == 'gsearch') {
+                this.fire('comment-tracker-add-source', {
+                  'type': 'post',
+                  'id': this.data.id,
+                  'user': null
+                });
+                this.added = true;
+                return;
+              }
+              if (this.type == 'yt' && !!this.data.postId) {
+                this.fire('comment-tracker-add-source', {
+                  'type': 'post',
+                  'id': this.data.postId,
+                  'user': null
+                });
+                this.added = true;
+                return;
+              }
+              break;
+            case 'show':
+              this.showing = true;
+              this.fire('comment-tracker-show-screen', {
+                type: this.type,
+                id: this.entryid,
+                text: this.screenContent,
+                img: this.img
+              });
+              return;
+            case 'hide':
+              this.showing = false;
+              this.fire('comment-tracker-hide-screen');
+              return;
+          }
+        },
+        ready: function () {
+          hangout = (global.gapi && global.gapi.hangout);
+        },
+        observe: {
+          showing: 'updateActions',
+          added: 'updateActions',
+          pinned: 'updateActions',
+          deleted: 'updateActions'
+        },
+        updateActions: function () {
+          this.actions = [];
+          if (this.type == 'person' || this.type == 'gsearch' || (this.type == 'yt' && !!this.data.postId)) {
+            if (!this.added) {
+              this.actions.push({
+                'title': 'Add to sources',
+                'icon': 'add-circle-outline',
+                'action': 'add'
+              });
+            }
+          }
+          if (hangout) {
+            if (this.showing) {
+              this.actions.push({
+                'title': 'Hide',
+                'icon': 'visibility-off',
+                'action': 'hide'
+              });
+            } else {
+              this.actions.push({
+                'title': 'Show',
+                'icon': 'visibility',
+                'action': 'show'
+              });
+            }
+          }
+          if (this.pinned) {
+            this.actions.push({
+              'title': 'Unpin',
+              'icon': 'keep',
+              'action': 'pin',
+              'color': '#C00'
+            });
+          } else {
+            this.actions.push({
+              'title': 'Pin',
+              'icon': 'keep',
+              'action': 'pin'
+            });
+          }
+          if (this.deleted) {
+            this.actions.push({
+              'title': 'Unhide comment',
+              'icon': 'delete',
+              'action': 'undelete',
+              'color': '#C00'
+            });
+          } else {
+            this.actions.push({
+              'title': 'Hide comment',
+              'icon': 'delete',
+              'action': 'delete'
+            });
+          }
+        },
+        dataChanged: function () {
+          var p;
+
+          switch (this.type) {
+            case 'post':
+              this.author = this.data.actor.displayName;
+              this.content = this.data.object.content;
+              this.img = this.data.actor.image.url;
+              this.service = this.resolvePath('gplus.png');
+              this.url = this.data.inReplyTo[0].url;
+              this.date = new Date(this.data.published);
+              break;
+            case 'person':
+            case 'gsearch':
+              this.author = this.data.actor.displayName;
+
+              this.content = '';
+              if (this.data.object.actor) {
+                this.content = 'Reshared from <a href="' + this.data.object.url + '">' + this.data.object.actor.displayName + '</a>\n\n';
+              }
+              this.content = this.content + this.data.object.content;
+
+              this.img = this.data.actor.image.url;
+              this.url = this.data.url;
+              this.date = new Date(this.data.published);
+              this.service = this.resolvePath('gplus.png');
+              break;
+            case 'twitter':
+              this.author = this.data.author.nickname + ' (' + this.data.author.name + ')';
+              this.content = this.data.tweet;
+              this.img = this.data.author.image;
+              this.url = this.data.url;
+              this.date = this.data.datetime;
+              this.service = this.resolvePath('twitter.png');
+              break;
+            case 'yt':
+              this.author = this.data.author[0].name.$t;
+              this.content = this.data.content.$t;
+              this.img = this.data.pic;
+              this.service = this.resolvePath('youtube.png');
+              this.url = 'https://www.youtube.com/watch?v=' + this.data.yt$videoid.$t;
+              this.date = new Date(this.data.updated.$t);
+              break;
+          }
+          if (this.date) {
+            this.formattedDate = formatDate(this.date);
+          }
+
+          if (hangout) {
+            this.screenContent = this.content;
+            if (this.data.annotation) {
+              this.screenContent = this.data.annotation + '\n\n' + this.screenContent;
+            }
+            this.screenContent = strip(this.screenContent.replace(/<br\s*[\/]?>/gi, '\n'));
+            if (this.screenContent.length > 250) {
+              this.screenContent = this.screenContent.substring(0, 250);
+              p = this.screenContent.lastIndexOf(' ');
+              if (p >= 1) {
+                this.screenContent = this.screenContent.substring(0, p) + '...';
+              } else {
+                this.screenContent = this.screenContent + '...';
+              }
+            }
+            this.screenContent = this.author + ':\n' + this.screenContent;
+          }
+
+          this.updateActions();
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>
+
