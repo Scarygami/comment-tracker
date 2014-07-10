@@ -154,7 +154,7 @@
               }
               this.content = this.content + this.data.object.content;
               this.img = this.data.actor.image.url;
-              this.service = this.resolvePath('gplus.png');
+              this.service = this.resolvePath('images/gplus.png');
               this.url = this.data.url;
               this.actions.push({
                 'title': 'Check reshares',
@@ -166,21 +166,21 @@
               this.title = this.data.displayName;
               this.subtitle = 'Google+ Stream';
               this.img = this.data.image.url;
-              this.service = this.resolvePath('gplus.png');
+              this.service = this.resolvePath('images/gplus.png');
               this.url = this.data.url;
               break;
             case 'twitter':
               this.title = this.data.title;
               this.subtitle = 'Twitter Search';
-              this.img = this.resolvePath('search.png');
-              this.service = this.resolvePath('twitter.png');
+              this.img = this.resolvePath('images/search.png');
+              this.service = this.resolvePath('images/twitter.png');
               this.url = this.data.url;
               break;
             case 'gsearch':
               this.title = this.sourceid;
               this.subtitle = 'Google+ Search';
-              this.img = this.resolvePath('search.png');
-              this.service = this.resolvePath('gplus.png');
+              this.img = this.resolvePath('images/search.png');
+              this.service = this.resolvePath('images/gplus.png');
               this.url = 'https://plus.google.com/s/' + encodeURIComponent(this.sourceid);
               break;
             case 'yt':
@@ -194,7 +194,7 @@
                 this.content = this.data.content.$t;
               }
               this.img = this.data.author[0].img;
-              this.service = this.resolvePath('youtube.png');
+              this.service = this.resolvePath('images/youtube.png');
               this.url = 'https://www.youtube.com/watch?v=' + this.sourceid;
 
               this.actions.push({
@@ -375,14 +375,14 @@
                       if (ajax.response && ajax.response.image && ajax.response.image.url) {
                         pic = ajax.response.image.url;
                       } else {
-                        pic = this.resolvePath('youtube_big.png');
+                        pic = this.resolvePath('images/youtube_big.png');
                       }
                       ytUserCache[comment.yt$googlePlusUserId.$t] = pic;
                     } else {
                       if (ajax.response && ajax.response.entry && ajax.response.entry.media$thumbnail) {
                         pic = ajax.response.entry.media$thumbnail.url;
                       } else {
-                        pic = this.resolvePath('youtube_big.png');
+                        pic = this.resolvePath('images/youtube_big.png');
                       }
                       ytUserCache[comment.author[0].uri.$t] = pic;
                     }

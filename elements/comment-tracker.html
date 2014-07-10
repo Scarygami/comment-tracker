@@ -302,7 +302,7 @@
               aria-label="Add source"
               disabled?="{{parsing > 0}}"></paper-icon-button>
             <template if="{{ parsing > 0 }}">
-              <core-icon id="spinner" src="spinner.gif" size="16"></core-icon>
+              <core-icon id="spinner" src="images/spinner.gif" size="16"></core-icon>
             </template>
           </div>
           <template repeat="{{source in sources}}">
@@ -487,10 +487,10 @@
             <form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="display: inline-block;" target="_blank">
               <input type="hidden" name="cmd" value="_s-xclick">
               <input type="hidden" name="hosted_button_id" value="B3Y4M6Y5HYFBE">
-              <input type="image" src="fund.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" title="Enable me to spend more time on projects like this :)" class="fund">
+              <input type="image" src="images/fund.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" title="Enable me to spend more time on projects like this :)" class="fund">
               <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
             </form>
-            <a href="http://www.amazon.de/registry/wishlist/34WAK3OTR8PRN" target="_blank"><img src="amazon.png" alt="Amazon Wishlist" title="Some stuff that would make me happy :)" class="fund"></a>
+            <a href="http://www.amazon.de/registry/wishlist/34WAK3OTR8PRN" target="_blank"><img src="images/amazon.png" alt="Amazon Wishlist" title="Some stuff that would make me happy :)" class="fund"></a>
           </div>
         </section>
       </core-pages>
@@ -657,7 +657,7 @@
               var video, tmp, ajax2;
               if (ajax.response && ajax.response.entry) {
                 video = ajax.response.entry;
-                video.author[0].img = 'elements/youtube_big.png';
+                video.author[0].img = thisHandler.resolvePath('images/youtube_big.png');
                 ajax2 = global.document.createElement('core-ajax');
                 ajax2.url = video.author[0].uri.$t + '?alt=json&key=' + thisHandler.ytapikey;
                 ajax2.handleAs = 'json';

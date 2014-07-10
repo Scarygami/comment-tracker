@@ -225,7 +225,7 @@
               this.author = this.data.actor.displayName;
               this.content = this.data.object.content;
               this.img = this.data.actor.image.url;
-              this.service = this.resolvePath('gplus.png');
+              this.service = this.resolvePath('images/gplus.png');
               this.url = this.data.inReplyTo[0].url;
               this.date = new Date(this.data.published);
               break;
@@ -242,7 +242,7 @@
               this.img = this.data.actor.image.url;
               this.url = this.data.url;
               this.date = new Date(this.data.published);
-              this.service = this.resolvePath('gplus.png');
+              this.service = this.resolvePath('images/gplus.png');
               break;
             case 'twitter':
               this.author = this.data.author.nickname + ' (' + this.data.author.name + ')';
@@ -250,13 +250,13 @@
               this.img = this.data.author.image;
               this.url = this.data.url;
               this.date = this.data.datetime;
-              this.service = this.resolvePath('twitter.png');
+              this.service = this.resolvePath('images/twitter.png');
               break;
             case 'yt':
               this.author = this.data.author[0].name.$t;
               this.content = this.data.content.$t;
               this.img = this.data.pic;
-              this.service = this.resolvePath('youtube.png');
+              this.service = this.resolvePath('images/youtube.png');
               this.url = 'https://www.youtube.com/watch?v=' + this.data.yt$videoid.$t;
               this.date = new Date(this.data.updated.$t);
               break;
