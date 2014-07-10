@@ -180,7 +180,8 @@
       })();
 
       Polymer('text-screen', {
-        ready: function () {
+        // using DOM Ready until firefox issues fixed
+        domReady: function () {
           if (!global.gapi || !global.gapi.hangout) { return; }
           this.textCanvas = new TextCanvas(this.$.textScreenCanvas, this.$.textScreenWork);
           this.setBackground();

@@ -130,8 +130,8 @@
               break;
           }
         },
-        ready: function () {
-
+        domReady: function () {
+          // using DOM Ready until firefox issues fixed
           switch (this.type) {
             case 'post':
               this.title = this.data.actor.displayName;

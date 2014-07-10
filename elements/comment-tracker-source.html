@@ -139,7 +139,8 @@
               }
           }
         },
-        ready: function () {
+        domReady: function () {
+          // using DOM Ready until firefox issues fixed
           this.hangout = (global.gapi && global.gapi.hangout);
           this.actions = [];
 
@@ -209,8 +210,7 @@
             'icon': 'delete',
             'action': 'delete'
           });
-        },
-        attached: function () {
+
           this.timeout = global.setTimeout(this.fetchEntries.bind(this), 1);
         },
         newEntry: function (entry) {

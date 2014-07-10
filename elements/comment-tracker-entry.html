@@ -281,6 +281,10 @@
               }
             }
             this.screenContent = this.author + ':\n' + this.screenContent;
+            if (this.screenContent.charCodeAt(this.screenContent.length - 1) == 65279) {
+              // Remove control character that messes up Firefox TextScreen
+              this.screenContent = this.screenContent.substring(0, this.screenContent.length - 1);
+            }
           }
 
           this.updateActions();

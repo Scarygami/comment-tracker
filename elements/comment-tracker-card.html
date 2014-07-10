@@ -64,6 +64,14 @@
         col: 'blue',
         performAction: function (e) {
           this.fire('comment-tracker-action', e.target.dataset.action);
+        },
+        coloursChanged: function () {
+          /* Workaround for FireFox */
+          if (this.colours) {
+            this.shadowRoot.querySelector('.card-inner').style.borderTop = "5px solid " + this.col;
+          } else {
+            this.shadowRoot.querySelector('.card-inner').style.borderTop = "0";
+          }
         }
       });
     }(this));

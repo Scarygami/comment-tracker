@@ -29,6 +29,9 @@
 
       * { box-sizing: border-box; margin: 0;}
 
+      /* prevent bleeding on firefox */
+      paper-toggle-button /deep/ * { box-sizing: content-box; }
+
       :host {
         display: block;
         width: 100%;
@@ -312,8 +315,8 @@
               colours="{{colours}}"
               apikey="{{apikey}}"
               ytapikey="{{ytapikey}}"
-              fullPost="{{!shortenSources}}"
-              hiddenActions="{{hiddenActions}}"
+              fullPost="{{fullSources}}"
+              hiddenActions="{{!visibleActions}}"
               on-comment-tracker-update="{{refresh}}"
               on-comment-tracker-delete-source="{{deleteSource}}"
               on-comment-tracker-add-source="{{addSource}}"
@@ -335,9 +338,9 @@
               colours="{{colours}}"
               data="{{entry.data}}"
               pinned="{{entry.pinned}}"
-              shorten="{{shortenComments}}"
+              shorten="{{!fullComments}}"
               showing="{{entry.showing}}"
-              hiddenActions="{{hiddenActions}}"
+              hiddenActions="{{!visibleActions}}"
               hiddenEntries="{{hiddenEntries}}"
               on-comment-tracker-update="{{refresh}}"
               on-comment-tracker-add-source="{{addSource}}"
@@ -397,48 +400,48 @@
                 Off - No coloured bars
               </div>
             </core-tooltip><br><br>
-            <core-localstorage name="oldestFirst" value="{{oldestFirst}}"></core-localstorage>
+            <core-localstorage name="newestFirst" value="{{newestFirst}}"></core-localstorage>
             <core-tooltip noarrow>
               <div class="setting" layout horizontal>
-                <span flex>Oldest first</span>
-                <paper-toggle-button checked="{{oldestFirst}}"></paper-toggle-button>
+                <span flex>Newest first</span>
+                <paper-toggle-button checked="{{newestFirst}}"></paper-toggle-button>
               </div>
               <div tip>
-                On - New comments at the bottom of the stream<br><br>
-                Off - New comments at the top
+                On - New comments at the top of the stream<br><br>
+                Off - New comments at the bottom
               </div>
             </core-tooltip><br><br>
-            <core-localstorage name="hiddenActions" value="{{hiddenActions}}"></core-localstorage>
+            <core-localstorage name="visibleActions" value="{{visibleActions}}"></core-localstorage>
             <core-tooltip noarrow>
               <div class="setting" layout horizontal>
-                <span flex>Hidden Actions</span>
-                <paper-toggle-button checked="{{hiddenActions}}"></paper-toggle-button>
+                <span flex>Visible Actions</span>
+                <paper-toggle-button checked="{{visibleActions}}"></paper-toggle-button>
               </div>
               <div tip>
-                On - Actions appear if you hover over cards<br><br>
-                Off - Actions are always displayed
+                On - Actions are always displayed<br><br>
+                Off - Actions appear if you hover over cards
               </div>
             </core-tooltip><br><br>
-            <core-localstorage name="shortenComments" value="{{shortenComments}}"></core-localstorage>
+            <core-localstorage name="fullComments" value="{{fullComments}}"></core-localstorage>
             <core-tooltip noarrow>
               <div class="setting" layout horizontal>
-                <span flex>Short Comments</span>
-                <paper-toggle-button checked="{{shortenComments}}"></paper-toggle-button>
+                <span flex>Full Comments</span>
+                <paper-toggle-button checked="{{fullComments}}"></paper-toggle-button>
               </div>
               <div tip>
-                On - Comments are cut off<br><br>
-                Off - Full comments are displayed
+                On - Full comments are displayed<br><br>
+                Off - Comments are cut off
               </div>
             </core-tooltip><br><br>
-            <core-localstorage name="shortenSources" value="{{shortenSources}}"></core-localstorage>
+            <core-localstorage name="fullSources" value="{{fullSources}}"></core-localstorage>
             <core-tooltip noarrow>
               <div class="setting" layout horizontal>
-                <span flex>Short Sources</span>
-                <paper-toggle-button checked="{{shortenSources}}"></paper-toggle-button>
+                <span flex>Full Sources</span>
+                <paper-toggle-button checked="{{fullSources}}"></paper-toggle-button>
               </div>
               <div tip>
-                On - Only titles of posts/videos are displayed<br><br>
-                Off - Full posts/video descriptions are displayed
+                On - Full posts/video descriptions are displayed<br><br>
+                Off - Only titles of posts/videos are displayed
               </div>
             </core-tooltip><br><br>
           </div>
@@ -829,10 +832,10 @@
         shares: [],
         hangout: false,
         colours: true,
-        shortenSources: true,
-        oldestFirst: false,
-        hiddenActions: false,
-        shortenComments: false,
+        newestFirst: true,
+        visibleActions: true,
+        fullComments: true,
+        fullSources: false,
         hiddenShares: false,
         hiddenEntries: false,
         addSource: function (e, details) {
@@ -883,7 +886,7 @@
         showScreen: function (e, details) {
           var ts = this.shadowRoot.getElementById('textScreen'), i;
           if (!ts) {
-            console.log('textScreen not found');
+            global.console.log('textScreen not found');
             return;
           }
           ts.text = details.text;
@@ -898,7 +901,7 @@
         hideScreen: function () {
           var ts = this.shadowRoot.getElementById('textScreen');
           if (!ts) {
-            console.log('textScreen not found');
+            global.console.log('textScreen not found');
             return;
           }
           ts.hide();
@@ -1043,7 +1046,7 @@
           }
           this.showHideShares();
         },
-        oldestFirstChanged: function () {
+        newestFirstChanged: function () {
           this.refresh();
         },
         refresh: function (e, details) {
@@ -1067,15 +1070,7 @@
               }
             }
           }
-          if (this.oldestFirst) {
-            this.entries.sort(function (a, b) {
-              if (a.pinned != b.pinned) {
-                if (a.pinned) return -1;
-                return 1;
-              }
-              return (a.sort - b.sort);
-            });
-          } else {
+          if (this.newestFirst) {
             this.entries.sort(function (a, b) {
               if (a.pinned != b.pinned) {
                 if (a.pinned) return -1;
@@ -1083,13 +1078,19 @@
               }
               return (b.sort - a.sort);
             });
+          } else {
+            this.entries.sort(function (a, b) {
+              if (a.pinned != b.pinned) {
+                if (a.pinned) return -1;
+                return 1;
+              }
+              return (a.sort - b.sort);
+            });
           }
         },
-        ready: function () {
+        domReady: function () {
           thisHandler = this;
           this.hangout = (global.gapi && global.gapi.hangout);
-        },
-        attached: function () {
           if (global.location.search) {
             this.sourceValue = 'http://www.allmyplus.com/comment-tracker/app.html' + global.location.search;
             this.add();
