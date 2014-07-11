@@ -60,17 +60,6 @@
         font-weight: 300;
       }
 
-      .core-header.open,
-      .core-header.open ~ core-animated-pages {
-          -webkit-transform: translate(250px, 0);
-          transform: translate(250px, 0);
-      }
-
-      .core-header, .navdrawer-container, core-animated-pages {
-        transition: -webkit-transform 0.3s ease-out;
-        transition: transform 0.3s ease-out;
-      }
-
       core-toolbar {
         background-color: #181;
         font-size: 1.5em;
@@ -93,14 +82,17 @@
         position: fixed;
         top: 0;
         bottom: 0;
-        width: 250px;
+        width: 150px;
         height: 100%;
         background-color: #181;
         color: #FEFEFE;
-        -webkit-transform: translate(-250px, 0);
-        transform: translate(-250px, 0);
+        -webkit-transform: translate(-155px, 0);
+        transform: translate(-155px, 0);
         overflow-y: auto;
         margin: 0;
+        transition: -webkit-transform 0.3s ease-out;
+        transition: transform 0.3s ease-out;
+        box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.4);
       }
 
       .navdrawer-container.open {
@@ -118,6 +110,7 @@
       .navdrawer-container h4 {
         background-color: white;
         color: #181;
+        cursor: pointer;
       }
 
       .navdrawer-container core-menu {
@@ -216,15 +209,9 @@
           height: 100px;
         }
 
-        .core-header.open,
-        .core-header.open ~ core-animated-pages {
-            -webkit-transform: translate(0px, 0);
-            transform: translate(0px, 0);
-        }
-
         .navdrawer-container.open {
-          -webkit-transform: translate(-250px, 0);
-          transform: translate(-250px, 0);
+          -webkit-transform: translate(-155px, 0);
+          transform: translate(-155px, 0);
         }
 
         a {
@@ -242,9 +229,9 @@
 
     </style>
 
-    <nav id="navdrawer" class="navdrawer-container promote-layer">
+    <nav id="navdrawer" class="navdrawer-container promote-layer" on-click="{{closeMenu}}">
       <h4>Navigation</h4>
-      <core-menu selected="{{menuItem}}" on-click="{{closeMenu}}">
+      <core-menu selected="{{menuItem}}">
         <paper-item label="Sources"></paper-item>
         <paper-item label="Stream"></paper-item>
         <template if="{{hangout}}">
@@ -256,7 +243,7 @@
     </nav>
 
     <core-header-panel>
-      <div class="core-header" id="appbar">
+      <div class="core-header">
         <core-toolbar>
           <paper-icon-button class="menu" icon="menu" on-click="{{toggleMenu}}"></paper-icon-button>
           <div flex class="title">
@@ -907,11 +894,9 @@
           ts.hide();
         },
         toggleMenu: function () {
-          this.$.appbar.classList.toggle('open');
           this.$.navdrawer.classList.toggle('open');
         },
         closeMenu: function () {
-          this.$.appbar.classList.remove('open');
           this.$.navdrawer.classList.remove('open');
         },
         openTracker: function () {
