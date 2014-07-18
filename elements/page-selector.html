@@ -1,0 +1,90 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/core-selector/core-selector.html">
+
+<polymer-element name="page-selector" attributes="selected numPages">
+  <template>
+    <style>
+
+      .page {
+        margin: 0px;
+        width: 37px;
+        cursor: pointer;
+      }
+
+      .page.core-selected {
+        font-weight: bold;
+      }
+
+      .page.hidden {
+        display: none;
+      }
+
+    </style>
+
+    <template if="{{numPages > 1}}">
+      <core-selector selected="{{selected}}">
+        <template repeat="{{state, p in pages}}">
+          <template if="{{state == 0}}">
+          <paper-icon-button label="{{p + 1}}" class="page"></paper-icon-button>
+          </template>
+          <template if="{{state == 1}}">
+          <paper-icon-button label="..." class="page"></paper-icon-button>
+          </template>
+          <template if="{{state == -1}}">
+          <paper-icon-button label="{{p + 1}}" class="page hidden"></paper-icon-button>
+          </template>
+        </template>
+      </core-selector>
+    </template>
+  </template>
+
+  <script>
+    (function () {
+      Polymer('page-selector', {
+        selected: 0,
+        numPages: 1,
+        pages: [],
+        observe: {
+          selected: 'updatePages',
+          numPages: 'updatePages'
+        },
+        updatePages: function () {
+          var i;
+          if (this.numPages <= 0) {
+            this.pages = [];
+            this.numPages = 0;
+            this.selected = 0;
+            return;
+          }
+
+          this.selected = Math.max(Math.min(this.selected, this.numPages - 1), 0);
+
+          this.pages = [];
+          for (i = 0; i < this.numPages; i++) {
+            if (this.numPages <= 5 || i === 0 || i === this.numPages -1 || i === this.selected) {
+              this.pages.push(0);
+            } else if (this.selected === 0 && i < 3) {
+              this.pages.push(0);
+            } else if (this.selected === this.numPages - 1 && i >= this.numPages - 3) {
+              this.pages.push(0);
+            } else if (i >= this.selected - 1 && i <= this.selected + 1) {
+              this.pages.push(0);
+            } else if (this.selected === 0 && i === 3) {
+              this.pages.push(1);
+            } else if (this.selected === this.numPages - 1 && i === this.numPages - 4) {
+              this.pages.push(1);
+            } else if (i === this.selected - 2) {
+              this.pages.push(1);
+            } else if (i === this.selected + 2) { 
+              this.pages.push(1);
+            } else {
+              this.pages.push(-1);
+            }
+          }
+        }
+      });
+    }());
+  </script>
+</polymer-element>
+

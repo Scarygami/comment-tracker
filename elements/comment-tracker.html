@@ -1,8 +1,8 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/core-icon/core-icon.html">
 <link rel="import" href="../bower_components/core-icons/core-icons.html">
-<link rel="import" href="../bower_components/core-icons/iconsets/social-icons.html">
-<link rel="import" href="../bower_components/core-icons/iconsets/communication-icons.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/communication-icons.html">
 <link rel="import" href="../bower_components/core-ajax/core-ajax.html">
 <link rel="import" href="../bower_components/core-localstorage/core-localstorage.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
@@ -16,11 +16,14 @@
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-radio-button/paper-radio-button.html">
 <link rel="import" href="comment-tracker-source.html">
 <link rel="import" href="comment-tracker-entry.html">
 <link rel="import" href="comment-tracker-share.html">
 <link rel="import" href="twitter-fetcher.html">
 <link rel="import" href="text-screen.html">
+<link rel="import" href="page-selector.html">
 
 <polymer-element name="comment-tracker" attributes="apikey ytapikey">
   <template>
@@ -141,16 +144,20 @@
       }
 
       .settings {
-        width: 200px;
+        width: 220px;
         margin: 16px auto;
       }
 
       .settings .setting {
-        width: 200px;
+        width: 220px;
       }
 
       .setting paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
         color: #181;
+      }
+
+      .setting paper-radio-group paper-radio-button {
+        padding-top: 0px;
       }
 
       .setting > span {
@@ -242,22 +249,25 @@
       </core-menu>
     </nav>
 
-    <core-header-panel>
-      <div class="core-header">
+    <core-header-panel id="panel">
+      <div class="core-header" id="header" on-click="{{scrollToTop}}">
         <core-toolbar>
           <paper-icon-button class="menu" icon="menu" on-click="{{toggleMenu}}"></paper-icon-button>
           <div flex class="title">
             <span class="appname">Comment Tracker</span>
             <span class="menuname">
-              {{menuItem == 0 ? 'CT Sources' : ''}}
-              {{menuItem == 1 ? 'CT Stream' : ''}}
-              {{(hangout && menuItem == 2) ? 'CT Shares': ''}}
-              {{menuItem == (hangout ? 3 : 2) ? 'CT Settings' : ''}}
-              {{menuItem == (hangout ? 4 : 3) ? 'CT About' : ''}}
+              {{menuItem == 0 ? 'Sources' : ''}}
+              {{menuItem == 1 ? 'Stream' : ''}}
+              {{(hangout && menuItem == 2) ? 'Shares': ''}}
+              {{menuItem == (hangout ? 3 : 2) ? 'Settings' : ''}}
+              {{menuItem == (hangout ? 4 : 3) ? 'About' : ''}}
             </span>
           </div>
           <template if="{{!hangout}}">
             <paper-icon-button icon="communication:hangout" on-click="{{openHangout}}"></paper-icon-button>
+          </template>
+          <template if="{{hangout && showing}}">
+            <paper-icon-button icon="visibility-off" on-click="{{hideScreen}}"></paper-icon-button>
           </template>
           <paper-icon-button icon="launch" on-click="{{openTracker}}"></paper-icon-button>
           <div class="bottom fit tabs" horizontal center-justified end layout>
@@ -275,12 +285,13 @@
       </div>
       <core-pages selected="{{menuItem}}">
         <section on-click="{{closeMenu}}">
-          <div layout horizontal>
+          <div layout horizontal center>
             <paper-input flex
               label="Source URL / Search Term"
               on-keydown="{{addKey}}"
               inputValue="{{sourceValue}}"
-              disabled?="{{parsing > 0}}"></paper-input>
+              disabled?="{{parsing > 0}}"
+              floatingLabel></paper-input>
             <paper-icon-button
               icon="add"
               on-tap="{{add}}"
@@ -292,22 +303,27 @@
               <core-icon id="spinner" src="images/spinner.gif" size="16"></core-icon>
             </template>
           </div>
-          <template repeat="{{source in sources}}">
-            <comment-tracker-source
-              type="{{source.type}}"
-              sourceid="{{source.id}}"
-              user="{{source.user}}"
-              col="{{source.col}}"
-              data="{{source.data}}"
-              colours="{{colours}}"
-              apikey="{{apikey}}"
-              ytapikey="{{ytapikey}}"
-              fullPost="{{fullSources}}"
-              hiddenActions="{{!visibleActions}}"
-              on-comment-tracker-update="{{refresh}}"
-              on-comment-tracker-delete-source="{{deleteSource}}"
-              on-comment-tracker-add-source="{{addSource}}"
-            ></comment-tracker-source>
+          <template if="{{sourcePages > 1}}">
+            <page-selector selected="{{sourcePage}}" numPages="{{sourcePages}}"></page-selector>
+          </template>
+          <template repeat="{{source, i in sources}}">
+            <template if="{{perPage == 0 || (i >= sourcePage * perPage && i < (sourcePage + 1) * perPage)}}">
+              <comment-tracker-source
+                type="{{source.type}}"
+                sourceid="{{source.id}}"
+                user="{{source.user}}"
+                col="{{source.col}}"
+                data="{{source.data}}"
+                colours="{{colours}}"
+                apikey="{{apikey}}"
+                ytapikey="{{ytapikey}}"
+                fullPost="{{fullSources}}"
+                hiddenActions="{{!visibleActions}}"
+                on-comment-tracker-update="{{refresh}}"
+                on-comment-tracker-delete-source="{{deleteSource}}"
+                on-comment-tracker-add-source="{{addSource}}"
+              ></comment-tracker-source>
+            </template>
           </template><br><br><br>
         </section>
         <section on-click="{{closeMenu}}">
@@ -316,24 +332,29 @@
               <span>Show hidden</span>
               <paper-toggle-button checked="{{hiddenEntries}}"></paper-toggle-button>
             </div>
+            <template if="{{entryPages > 1}}">
+              <page-selector selected="{{entryPage}}" numPages="{{entryPages}}"></page-selector>
+            </template>
           </template>
-          <template repeat="{{entry in entries}}">
-            <comment-tracker-entry
-              type="{{entry.type}}"
-              entryid="{{entry.id}}"
-              col="{{entry.col}}"
-              colours="{{colours}}"
-              data="{{entry.data}}"
-              pinned="{{entry.pinned}}"
-              shorten="{{!fullComments}}"
-              showing="{{entry.showing}}"
-              hiddenActions="{{!visibleActions}}"
-              hiddenEntries="{{hiddenEntries}}"
-              on-comment-tracker-update="{{refresh}}"
-              on-comment-tracker-add-source="{{addSource}}"
-              on-comment-tracker-show-screen="{{showScreen}}"
-              on-comment-tracker-hide-screen="{{hideScreen}}"
-            ></comment-tracker-entry>
+          <template repeat="{{entry, i in entries}}">
+            <template if="{{perPage == 0 || (i >= entryPage * perPage && i < (entryPage + 1) * perPage)}}">
+              <comment-tracker-entry
+                type="{{entry.type}}"
+                entryid="{{entry.id}}"
+                col="{{entry.col}}"
+                colours="{{colours}}"
+                data="{{entry.data}}"
+                pinned="{{entry.pinned}}"
+                shorten="{{!fullComments}}"
+                showing="{{entry.showing}}"
+                hiddenActions="{{!visibleActions}}"
+                hiddenEntries="{{hiddenEntries}}"
+                on-comment-tracker-update="{{refresh}}"
+                on-comment-tracker-add-source="{{addSource}}"
+                on-comment-tracker-show-screen="{{showScreen}}"
+                on-comment-tracker-hide-screen="{{hideScreen}}"
+              ></comment-tracker-entry>
+            </template>
           </template><br><br><br>
           <template if="{{hangout}}">
             <text-screen id="textScreen"></text-screen>
@@ -357,20 +378,25 @@
               <span>Show hidden</span>
               <paper-toggle-button checked="{{hiddenShares}}"></paper-toggle-button>
             </div>
+            <template if="{{sharePages > 1}}">
+              <page-selector selected="{{sharePage}}" numPages="{{sharePages}}"></page-selector>
+            </template>
           </template>
 
-          <template repeat="{{share in shares}}">
-            <comment-tracker-share
-              type="{{share.type}}"
-              sourceid="{{share.id}}"
-              user="{{share.user}}"
-              data="{{share.data}}"
-              added="{{share.added}}"
-              fullPost="{{!shortenSources}}"
-              hiddenActions="{{hiddenActions}}"
-              hiddenShares="{{hiddenShares}}"
-              on-comment-tracker-add-source="{{addSource}}"
-            ></comment-tracker-share>
+          <template repeat="{{share, i in shares}}">
+            <template if="{{perPage == 0 || (i >= sharePage * perPage && i < (sharePage + 1) * perPage)}}">
+              <comment-tracker-share
+                type="{{share.type}}"
+                sourceid="{{share.id}}"
+                user="{{share.user}}"
+                data="{{share.data}}"
+                added="{{share.added}}"
+                fullPost="{{!shortenSources}}"
+                hiddenActions="{{hiddenActions}}"
+                hiddenShares="{{hiddenShares}}"
+                on-comment-tracker-add-source="{{addSource}}"
+              ></comment-tracker-share>
+            </template>
           </template><br><br><br>
         </section>
         </template>
@@ -431,6 +457,17 @@
                 Off - Only titles of posts/videos are displayed
               </div>
             </core-tooltip><br><br>
+            <core-localstorage name="perPage" value="{{perPage}}"></core-localstorage>
+            <div class="setting" layout horizontal start>
+              <span flex>Items per Page</span>
+              <paper-radio-group selected="{{perPage}}">
+                <paper-radio-button name="10" label="10"></paper-radio-button><br>
+                <paper-radio-button name="25" label="25"></paper-radio-button><br>
+                <paper-radio-button name="50" label="50"></paper-radio-button><br>
+                <paper-radio-button name="100" label="100"></paper-radio-button><br>
+                <paper-radio-button name="0" label="Unlimited"></paper-radio-button><br>
+              </paper-radio-group>
+            </div>
           </div>
         </section>
         <section on-click="{{closeMenu}}">
@@ -490,6 +527,16 @@
       var
         thisHandler,
         colors = ['#FF0', '#0F0', '#00F', '#F0F', '#F00', '#0FF', '#F90', '#0F9'];
+
+      function scrollToTop(element, duration) {
+          if (duration <= 0) return;
+          var perTick = element.scrollTop / duration * 10;
+
+          setTimeout(function () {
+              element.scrollTop = element.scrollTop - perTick;
+              scrollToTop(element, duration - 10);
+          }, 10);
+      }
 
       function addSource(type, user, id, reshare, shared, cb) {
         var ajax, i, found, tmp, sources;
@@ -811,6 +858,25 @@
         addSource('gsearch', null, source, null, false, innerCallback);
       }
 
+      function checkHOA() {
+        var video_id;
+        if (!global.gapi || !global.gapi.hangout) { return; }
+
+        video_id = global.gapi.hangout.onair.getYouTubeLiveId();
+        if (video_id) {
+          addSource('yt', null, video_id, null, false, function (source) {
+            var new_state;
+            thisHandler.parsing--;
+            if (source) {
+              thisHandler.sources.push(source);
+              new_state = {};
+              new_state['yt//' + video_id] = "1";
+              global.gapi.hangout.data.submitDelta(new_state, []);
+            }
+          });
+        }
+      }
+
       Polymer('comment-tracker', {
         menuItem: 0,
         parsing: 0,
@@ -825,6 +891,21 @@
         fullSources: false,
         hiddenShares: false,
         hiddenEntries: false,
+        showing: false,
+        perPage: 50,
+        entryPage: 0,
+        entryPages: 0,
+        sourcePage: 0,
+        sourcePages: 0,
+        sharePage: 0,
+        sharePages: 0,
+        perPageChanged: function () {
+          this.updatePages();
+        },
+        scrollToTop: function (e) {
+          if (e.target.tagName == 'PAPER-ICON-BUTTON') { return; }
+          scrollToTop(this.$.panel.shadowRoot.getElementById("mainContainer"), 50);
+        },
         addSource: function (e, details) {
           var i;
           if (details.type == 'yt-comments') {
@@ -851,6 +932,7 @@
               }
             }
             this.showHideShares();
+            this.updatePages();
           }.bind(this));
         },
         deleteSource: function (e, details) {
@@ -869,6 +951,7 @@
             }
           }
           this.showHideShares();
+          this.updatePages();
         },
         showScreen: function (e, details) {
           var ts = this.shadowRoot.getElementById('textScreen'), i;
@@ -884,6 +967,7 @@
               this.entries[i].showing = false;
             }
           }
+          this.showing = true;
         },
         hideScreen: function () {
           var ts = this.shadowRoot.getElementById('textScreen');
@@ -892,6 +976,10 @@
             return;
           }
           ts.hide();
+          for (i = 0; i < this.entries.length; i++) {
+            this.entries[i].showing = false;
+          }
+          this.showing = false;
         },
         toggleMenu: function () {
           this.$.navdrawer.classList.toggle('open');
@@ -955,6 +1043,7 @@
               }
             }
             this.showHideShares();
+            this.updatePages();
           }.bind(this));
         },
         shareSourcesKey: function (e) {
@@ -1030,9 +1119,25 @@
             }
           }
           this.showHideShares();
+          this.updatePages();
         },
         newestFirstChanged: function () {
           this.refresh();
+        },
+        updatePages: function () {
+          if (!this.perPage || this.perPage === 0 || this.perPage === "0") {
+            this.entryPages = 0;
+            this.entryPage = 0;
+            this.sourcePages = 0;
+            this.sourcePage = 0;
+            this.sharePages = 0;
+            this.sharePage = 0;
+            return;
+          }
+
+          this.entryPages = Math.ceil(this.entries.length / this.perPage);
+          this.sourcePages = Math.ceil(this.sources.length / this.perPage);
+          this.sharePages = Math.ceil(this.shares.length / this.perPage);
         },
         refresh: function (e, details) {
           var i, j, entry, found;
@@ -1072,6 +1177,7 @@
               return (a.sort - b.sort);
             });
           }
+          this.updatePages();
         },
         domReady: function () {
           thisHandler = this;
@@ -1084,6 +1190,7 @@
           if (global.gapi && global.gapi.hangout) {
             global.gapi.hangout.data.onStateChanged.add(this.updateShared.bind(this));
             this.updateShared();
+            global.gapi.hangout.onair.onYouTubeLiveIdReady.add(checkHOA);
           }
         }
       });

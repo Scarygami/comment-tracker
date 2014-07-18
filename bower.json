@@ -22,6 +22,7 @@
     "core-tooltip": "Polymer/core-tooltip#master",
     "paper-elements": "Polymer/paper-elements#master",
     "paper-item": "Polymer/paper-item#master",
+    "paper-radio-group": "Polymer/paper-radio-group#master",
     "hangout-app": "Scarygami/hangout-app#master"
   }
 }
