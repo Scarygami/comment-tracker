@@ -63,6 +63,10 @@
         font-weight: 300;
       }
 
+      .logo {
+        display: none;
+      }
+
       core-toolbar {
         background-color: #181;
         font-size: 1.5em;
@@ -203,6 +207,9 @@
         .menu {
           display: none;
         }
+        .logo {
+          display: inline-block;
+        }
 
         .tabs {
           visibility: visible;
@@ -253,6 +260,7 @@
       <div class="core-header" id="header" on-click="{{scrollToTop}}">
         <core-toolbar>
           <paper-icon-button class="menu" icon="menu" on-click="{{toggleMenu}}"></paper-icon-button>
+          <img src="images/logo.png" class="logo">
           <div flex class="title">
             <span class="appname">Comment Tracker</span>
             <span class="menuname">
@@ -391,8 +399,8 @@
                 user="{{share.user}}"
                 data="{{share.data}}"
                 added="{{share.added}}"
-                fullPost="{{!shortenSources}}"
-                hiddenActions="{{hiddenActions}}"
+                fullPost="{{fullSources}}"
+                hiddenActions="{{!visibleActions}}"
                 hiddenShares="{{hiddenShares}}"
                 on-comment-tracker-add-source="{{addSource}}"
               ></comment-tracker-share>
@@ -472,13 +480,13 @@
         </section>
         <section on-click="{{closeMenu}}">
           <div class="about">
-            <img src="https://www.foldedsoft.at/plus/comment-tracker/images/comment-tracker.png" alt="Comment Tracker" style="vertical-align: middle;"> <b>Comment Tracker</b><br><br>
+            <img src="images/logo.png" alt="Comment Tracker" style="vertical-align: middle;"> <b>Comment Tracker</b><br><br>
             <div layout horizontal center>
               <core-icon icon="info-outline"></core-icon>
               <span flex>
-                <a href="http://www.allmyplus.com/comment-tracker/" target="_blank">Website</a> /
-                <a href="http://www.allmyplus.com/comment-tracker/tos.html" target="_blank">TOS</a> /
-                <a href="http://www.allmyplus.com/comment-tracker/privacy.html" target="_blank">Privacy Policy</a>
+                <a href="/comment-tracker/" target="_blank">Website</a> /
+                <a href="/comment-tracker/#tos" target="_blank">TOS</a> /
+                <a href="/comment-tracker/#privacy" target="_blank">Privacy Policy</a>
               </span>
             </div>
             <div layout horizontal center>
@@ -505,7 +513,7 @@
 
             <div layout horizontal center>
               <core-icon icon="bug-report"></core-icon>
-              <span flex><a href="https://github.com/Scarygami/comment_tracker" target="_blank">GitHub</a></span>
+              <span flex><a href="https://github.com/Scarygami/comment-tracker" target="_blank">GitHub</a></span>
             </div><br><br><br>
 
             <form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="display: inline-block;" target="_blank">
@@ -543,7 +551,7 @@
 
         thisHandler.parsing++;
 
-        sources = shared ? thisHandler.shares : thisHandler.sources;
+        sources = shared ? thisHandler.allShares : thisHandler.sources;
 
         found = false;
 
@@ -883,6 +891,7 @@
         sources: [],
         entries: [],
         shares: [],
+        allShares: [],
         hangout: false,
         colours: true,
         newestFirst: true,
@@ -925,7 +934,7 @@
             thisHandler.parsing--;
             if (source) {
               if (details.shared) {
-                this.shares.push(source);
+                this.allShares.push(source);
               } else {
                 source.col = colors[this.sources.length % colors.length];
                 this.sources.push(source);
@@ -1076,21 +1085,25 @@
         },
         showHideShares: function () {
           var i, j, added;
-          for (i = 0; i < this.shares.length; i++) {
+          this.shares = [];
+          for (i = 0; i < this.allShares.length; i++) {
             added = false;
             for (j = 0; j < this.sources.length; j++) {
-              if (this.shares[i].type == this.sources[j].type) {
-                if (this.shares[i].user == this.sources[j].user && this.shares[i].id == this.sources[j].id) {
+              if (this.allShares[i].type == this.sources[j].type) {
+                if (this.allShares[i].user == this.sources[j].user && this.allShares[i].id == this.sources[j].id) {
                   added = true;
                   break;
                 }
-                if (this.shares[i].activityId == this.sources[j].activityId) {
+                if (this.allShares[i].activityId && this.allShares[i].activityId == this.sources[j].activityId) {
                   added = true;
                   break;
                 }
               }
             }
-            this.shares[i].added = added;
+            this.allShares[i].added = added;
+            if (!added) {
+              this.shares.push(this.allShares[i]);
+            }
           }
         },
         updateShared: function (eventObj) {

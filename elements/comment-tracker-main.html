@@ -1,0 +1,506 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/core-icon/core-icon.html">
+<link rel="import" href="../bower_components/core-icons/core-icons.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/communication-icons.html">
+<link rel="import" href="../bower_components/core-ajax/core-ajax.html">
+<link rel="import" href="../bower_components/core-localstorage/core-localstorage.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="../bower_components/core-menu/core-menu.html">
+<link rel="import" href="../bower_components/core-pages/core-pages.html">
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/core-tooltip/core-tooltip.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-radio-button/paper-radio-button.html">
+
+<polymer-element name="comment-tracker-main">
+  <template>
+
+    <style>
+
+      * { box-sizing: border-box; margin: 0;}
+
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        margin: 0; padding: 0;
+        position: relative;
+        font-family: 'Roboto Condensed', 'Helvetica', 'Arial', sans-serif;
+        font-weight: 300;
+        background-color: #FFFFFF;
+        box-sizing: border-box;
+        min-height: 100%;
+      }
+
+      h1 {
+        font-family: 'Roboto Condensed', 'Helvetica', 'Arial', sans-serif;
+      }
+
+      a paper-icon-button {
+        color: white;
+      }
+
+      core-header-panel {
+        width: 100%;
+        height: 100%;
+      }
+
+      core-header-panel::shadow #mainContainer {
+        overflow-y: scroll;
+      }
+
+      .core-header {
+        background-color: #181;
+        color: #FEFEFE;
+        font-weight: 300;
+      }
+
+      .logo {
+        display: none;
+      }
+
+      core-toolbar {
+        background-color: #181;
+        font-size: 1.5em;
+      }
+
+      core-toolbar paper-icon-button {
+        fill: white;
+      }
+
+      core-toolbar, section {
+        margin: 0 auto;
+      }
+
+      .tabs {
+        visibility: hidden;
+      }
+
+      .navdrawer-container {
+        z-index: 1;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: 150px;
+        height: 100%;
+        background-color: #181;
+        color: #FEFEFE;
+        -webkit-transform: translate(-155px, 0);
+        transform: translate(-155px, 0);
+        overflow-y: auto;
+        margin: 0;
+        transition: -webkit-transform 0.3s ease-out;
+        transition: transform 0.3s ease-out;
+        box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.4);
+      }
+
+      .navdrawer-container.open {
+        -webkit-transform: translate(0, 0);
+        transform: translate(0, 0);
+      }
+
+      .navdrawer-container h4,
+      .navdrawer-container paper-item {
+        height: 64px;
+        padding: 0 20px;
+        line-height: 64px;
+      }
+
+      .navdrawer-container h4 {
+        background-color: white;
+        color: #181;
+        cursor: pointer;
+      }
+
+      .navdrawer-container core-menu {
+        padding: 0;
+        margin: 0;
+      }
+
+      .navdrawer-container paper-item {
+        border-bottom-style: solid;
+        border-width: 1px;
+        border-color: white;
+      }
+
+      .navdrawer-container paper-item:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .navdrawer-container paper-item.core-selected {
+        background-color: rgba(255, 255, 255, 0.4);
+      }
+
+      section {
+        padding: 8px;
+        font-family: sans-serif;
+        text-align: justify;
+      }
+
+      .appname {
+        display: none;
+      }
+
+      .settings {
+        width: 220px;
+        margin: 16px auto;
+      }
+
+      .settings .setting {
+        width: 220px;
+      }
+
+      .setting paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+        color: #181;
+      }
+
+      .setting paper-radio-group paper-radio-button {
+        padding-top: 0px;
+      }
+
+      .setting > span {
+        margin-right: 4px;
+      }
+
+      .about {
+        max-width: 280px;
+        margin: 16px auto;
+      }
+
+      .about > div {
+        margin-bottom: 6px;
+      }
+
+      .about core-icon {
+        margin-right: 6px;
+      }
+
+      paper-tab {
+        cursor: pointer;
+      }
+
+      core-pages > section {
+        display: none;
+      }
+
+      core-pages > section.core-selected {
+        display: block;
+      }
+
+      #spinner {
+        margin: 12px 0;
+      }
+
+      .small {
+        font-size: 0.8em;
+      }
+
+      section img {
+        max-width: 100%;
+      }
+
+      @media all and (min-device-width: 1200px) and (min-width: 450px) {
+        .appname {
+          display: inline-block;
+        }
+        .menuname {
+          display: none;
+        }
+        .menu {
+          display: none;
+        }
+        .logo {
+          display: inline-block;
+        }
+
+        .tabs {
+          visibility: visible;
+        }
+
+        core-toolbar, section {
+          max-width: 864px;
+        }
+
+        core-toolbar {
+          height: 100px;
+        }
+
+        .navdrawer-container.open {
+          -webkit-transform: translate(-155px, 0);
+          transform: translate(-155px, 0);
+        }
+
+        a {
+          text-decoration: none;
+        }
+
+        a:hover, a:active {
+          text-decoration: underline;
+        }
+
+        section {
+          padding: 16px;
+        }
+      }
+
+    </style>
+
+    <nav id="navdrawer" class="navdrawer-container promote-layer" on-click="{{closeMenu}}">
+      <h4>Navigation</h4>
+      <core-menu selected="{{menuItem}}"  on-core-select="{{updateMenu}}">
+        <paper-item label="About"></paper-item>
+        <paper-item label="TOS"></paper-item>
+        <paper-item label="Privacy"></paper-item>
+        <paper-item label="Contact"></paper-item>
+      </core-menu>
+    </nav>
+
+    <core-header-panel id="panel">
+      <div class="core-header" id="header" on-click="{{scrollToTop}}">
+        <core-toolbar>
+          <paper-icon-button class="menu" icon="menu" on-click="{{toggleMenu}}"></paper-icon-button>
+          <img src="images/logo.png" class="logo">
+          <div flex class="title">
+            <span class="appname">Comment Tracker</span>
+            <span class="menuname">
+              {{menuItem == 0 ? 'About' : ''}}
+              {{menuItem == 1 ? 'TOS' : ''}}
+              {{menuItem == 2 ? 'Privacy' : ''}}
+              {{menuItem == 3 ? 'Contact' : ''}}
+            </span>
+          </div>
+          <paper-icon-button icon="communication:hangout" on-click="{{openHangout}}"></paper-icon-button>
+          <paper-icon-button icon="launch" on-click="{{openTracker}}"></paper-icon-button>
+          <div class="bottom fit tabs" horizontal center-justified end layout>
+            <paper-tabs selected="{{menuItem}}" flex noink on-core-select="{{updateMenu}}">
+              <paper-tab>About</paper-tab>
+              <paper-tab>Terms of Service</paper-tab>
+              <paper-tab>Privacy Policy</paper-tab>
+              <paper-tab>Contact</paper-tab>
+            </paper-tabs>
+          </div>
+        </core-toolbar>
+      </div>
+      <core-pages selected="{{menuItem}}">
+        <section on-click="{{closeMenu}}">
+          <h1>Description</h1>
+          <p>Do you use Hangouts on Air and want your viewers to interact with you more directly?</p>
+          <p>This simple Hangout extension gives you this possibility by displaying the comments happening on Google+ posts, YouTube videos and more directly inside of the hangout, giving you the chance to react to the comments live.</p><br>
+
+          <h1>Installation</h1>
+
+          <p>You can start using the app in a Google+&#8482; Hangout by clicking on one of the button below.</p>
+          <p>Please make sure to read and agree to the <a href="/comment-tracker/#tos">Terms of Service</a> and <a href="/comment-tracker/#tos">Privacy Policy</a> before using the app.</p><br>
+
+          <span id="start_hangout_onair"></span>
+          <span id="start_hangout"></span><br><br>
+
+          <p>If this is your first time using the app, you will be asked to authorize it.</p>
+          <img src="images/installation1.png" alt="Installation 1" style="border: 1px solid black;"><br><br>
+
+          <p>Clicking on "Continue" will open a standard Google Authorization window.</p>
+          <img src="images/installation2.png" alt="Installation 2" style="border: 1px solid black;"><br><br>
+
+          <p>After you accept the permissions Comment Tracker will load in a side bar in the Hangout.</p><br>
+
+          <p>You can also use <a href="/comment-tracker/app.html">Comment Tracker outside of a Hangout</a></p><br>
+
+          <h1>Usage</h1>
+          For more detailed instructions please refer to <a href="https://docs.google.com/document/d/1KF_cS_h5zhisfxGOU_EbwLlNUnWKvygT0_yj5RvYq0Y/edit">this document on Google Drive</a>.<br><br>
+
+
+          <template id="footer" bind>
+            <hr><br>
+            <p class="small">
+              Google+ is a trademark of Google Inc. Use of this trademark is subject to <a href="http://www.google.com/permissions/index.html">Google Permissions</a>.<br>
+              This site is not affiliated with, sponsored by, or endorsed by <a href="http://www.google.com/">Google Inc</a>.<br><br>
+
+              Programming by <a href="https://plus.google.com/112336147904981294875">Gerwin Sturm</a>, <a href="http://www.foldedsoft.at/">FoldedSoft e.U.</a>
+              <a href="http://www.wkoecg.at/Web/Ecg.aspx?FirmaID=356eb2f8-55fc-455f-a72e-7c69cd28e5ee"><img src="images/ecg.gif" style="border:0px" alt="Informationen zu E-Commerce und Mediengesetz"></a>
+            </p><br><br>
+          </template>
+        </section>
+        <section on-click="{{closeMenu}}">
+          Date of Last Revision: April 3, 2012<br><br>
+          Important – before using the Service please read the terms of this agreement ("Terms of Service") carefully. These Terms of Service supersede any ealier version.<br><br>
+          The purpose of these Terms of Service is to set out Our legal relationship with You in connection with the provision of the Service. You acknowledge and accept to be bound by these Terms of Service by accessing or using the Service (as defined below). When You (as defined below) access or use the Service, a legally binding agreement on these Terms of Service together with Our <a href="/comment-tracker/#privacy">Privacy Policy</a> is concluded between, (a) You, the end user ("You") and (b) FoldedSoft e.U., a company registered in Vienna, Austria under company number 336909f whose registered office is located at Gudrunstr. 105/3/43, 1100 Wien. FoldedSoft e.U. is defined as "We", "Us" or "Our" as appropriate.<br><br>
+          We reserve the right, at our sole discretion, to change or modify portions of these Terms of Service at any time without further notice. You should periodically visit this page to review the current Terms of Service so you are aware of any revision to which you are bound. If we do this, we will post the changes to these Terms of Service on this page and will indicate at the top of this page the date these terms were last revised. Your continued use of the Service after any such changes constitutes your acceptance of the new Terms of Service. If you do not agree to abide by these or any future Terms of Service, do not use or access (or continue to use or access) the Service. It is your responsibility to regularly check the Site to determine if there have been changes to these Terms of Service and to review such changes.<br><br>
+          Your attention is also drawn to Our <a href="/comment-tracker/#privacy">Privacy Policy</a> which describes how We deal with and protect Your Information. By accessing or using the Service You consent to the collection and use of Your Information as outlined in Our Privacy Policy.<br><br>
+          By accessing or using the Service, You agree to comply with these Terms of Service, and You acknowledge that Your failure to comply with these Terms of Service may result in suspension or termination, and/or legal action against You, as appropriate.<br><br>
+          We provide the Service via Google+™ Hangouts (the "Platform") on which You access Our hangout applications (the "Service") using Your Account (as defined below).<br><br>
+          The Service is only available to persons who are registered members of the Google+™ service ("Social Network"), subject to the relevant terms of service of such Social Network, being the supporting service through which they access the Service. To use the Service, You will thus first need to register for a valid account ("Account") on the Social Network. You may then access the Service from Your Account. You may further need to download and install software as provided on the Platform.<br><br>
+          By using the Service You are also bound to all terms of the Social Network and especially agree to the <a href="http://www.google.com/intl/en/+/policy/content.html">Google+ User Content and Conduct Policy</a>.
+          Every person who identifies themselves by using Our Service with a correct Account is assumed by Us to be the rightful Account holder and all transactions using this Account will be regarded as valid. In no event will We be liable for any loss You suffer as a result of any unauthorised use or misuse of Your Account.<br><br>
+          Your use of the Service is for Your personal use only. You may not use the Service for any commercial purpose.<br><br>
+          The Service is provided on an "as is" basis, without warranties or conditions of any kind, either expressed or implied. We are not liable for any damage that You may encounter through the usage of Our service. Furthermore We reserve the right to modify and/or remove the Service in Our sole descretion with immediate effect and without notice.<br><br>
+          <template ref="footer" bind></template>
+        </section>
+        <section on-click="{{closeMenu}}">
+          Date of Last Revision: March 30, 2012<br><br>
+          We are committed to protecting Your Information and providing You with a safe, efficient and customized experience. To this effect, We have created this Privacy Policy to let You know what Information We collect when You use the Service, why We collect this Information and how We use the collected Information. The terms defined in this Privacy Policy shall have the same meanings as in the <a href="/comment-tracker/#tos">Terms of Service</a>.<br><br>
+          By accessing or using the Service, You agree to this Privacy Policy. This is Our entire and exclusive Privacy Policy and it supersedes any earlier version. This Privacy Policy should be read in conjunction with the <a href="/comment-tracker/#tos">Terms of Service</a><br><br>
+          <b>Collecting Information</b><br><br>
+          By accessing or using the Service through the Platform, You authorise Us to use certain Information (as defined below), which is affected by the privacy settings You establish on the Social Network. You can control and find out more about these settings at the Social Network where You access the Service. We may, in accordance with this Privacy Policy, collect information and/or personal data, including but not limited to, your name, profile picture or its URL, and certain technical information (the "Information") via the <a href="https://developers.google.com/+/hangouts/">Google+™ Hangouts API</a> and the <a href="https://developers.google.com/+/api/">Google+™ API</a>.<br><br>
+          <b>Use of Your Information</b><br><br>
+          The Information will be used only while actively using the Service, and only You and the other participants will have access to this Information inside of the Service. The Information will not be saved for longer than is needed for providing the Service and will not be shared in any other way.<br><br>
+          <b>Disclaimer</b><br><br>
+          You expressly agree that the Service is provided on an "as is" basis without warranties of any kind. We are not responsible for events beyond Our direct control. Because of the complex and constantly changing nature of Our technology and business, We cannot guarantee nor do We represent that there will be error-free performance regarding the privacy of Your Information, and We will not be liable for any indirect, incidental, consequential or punitive damages relating to the use or release of Your Information.<br><br>
+          <template ref="footer" bind></template>
+        </section>
+        <section on-click="{{closeMenu}}">
+
+          <h1>Contact information</h1><br>
+          <p>If you have questions/suggestions/problems or want to stay updated on changes you can contact me on Google+ either personally or via one of my pages.</p><br>
+          <a href="https://plus.google.com/112986009215783461617" rel="publisher">+Comment Tracker</a><br><br>
+          <a href="https://plus.google.com/105696887942257432718" rel="publisher">+FoldedSoft</a><br><br>
+          <a href="https://plus.google.com/112336147904981294875" rel="author">+GerwinSturm</a><br><br><br>
+
+          <h1>Issue Tracker</h1><br>
+
+          <a href="https://github.com/Scarygami/comment-tracker">GitHub</a><br><br><br>
+
+          <h1>Contributors</h1><br>
+
+          <a href="https://plus.google.com/101852559274654726533">Allen "Prisoner" Firstenberg</a> - TextScreen<br><br>
+          <a href="https://plus.google.com/110804953626559077511">Jason Mayes</a> - Twitter Fetcher<br><br><br>
+
+
+          <h1>If you like what I'm doing:</h1><br>
+          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="display: inline-block;" target="_blank">
+            <input type="hidden" name="cmd" value="_s-xclick">
+            <input type="hidden" name="hosted_button_id" value="B3Y4M6Y5HYFBE">
+            <input type="image" src="images/fund.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" title="Enable me to spend more time on projects like this :)" class="fund">
+            <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
+          </form>
+          <a href="http://www.amazon.de/registry/wishlist/34WAK3OTR8PRN" target="_blank"><img src="images/amazon.png" alt="Amazon Wishlist" title="Some stuff that would make me happy :)" class="fund"></a><br><br>
+
+          <template ref="footer" bind></template>
+        </section>
+      </core-pages>
+    </core-header-panel>
+    <paper-toast id="warning" text="{{warning}}"></paper-toast>
+  </template>
+
+  <script>
+    (function (global) {
+
+      var hash = this.location.hash;
+
+      function scrollToTop(element, duration) {
+          if (duration <= 0) return;
+          var perTick = element.scrollTop / duration * 10;
+
+          setTimeout(function () {
+              element.scrollTop = element.scrollTop - perTick;
+              scrollToTop(element, duration - 10);
+          }, 10);
+      }
+
+      Polymer('comment-tracker-main', {
+        menuItem: 0,
+        loaded: {},
+
+        scrollToTop: function (e) {
+          if (e.target.tagName == 'PAPER-ICON-BUTTON') { return; }
+          scrollToTop(this.$.panel.shadowRoot.getElementById("mainContainer"), 50);
+        },
+        openHangout: function () {
+          global.open('https://plus.google.com/hangouts/_?gid=947523017864');
+        },
+        openTracker: function () {
+          global.open('/comment-tracker/app.html');
+        },
+        updateMenu: function () {
+          switch (this.menuItem) {
+            case 0:
+              global.location.hash = '#about';
+              break;
+            case 1:
+              global.location.hash = '#tos';
+              break;
+            case 2:
+              global.location.hash = '#privacy';
+              break;
+            case 3:
+              global.location.hash = '#contact';
+              break;
+          }
+        },
+        toggleMenu: function () {
+          this.$.navdrawer.classList.toggle('open');
+        },
+        closeMenu: function () {
+          this.$.navdrawer.classList.remove('open');
+        },
+        checkHash: function (hash) {
+          switch(hash) {
+            case '#about':
+              this.menuItem = 0;
+              break;
+            case '#tos':
+              this.menuItem = 1;
+              break;
+            case '#privacy':
+              this.menuItem = 2;
+              break;
+            case '#contact':
+              this.menuItem = 3;
+              break;
+          }
+        },
+        prerender: function() {
+          var object = document.createElement('span');
+          document.body.appendChild(object);
+          return object;
+        },
+        postrender: function(object, parent) {
+          var iframe = object.firstElementChild;
+          iframe.addEventListener('load', function() {
+            if (!this.loaded[parent]) {
+              this.$[parent].appendChild(object);
+              this.loaded[parent] = true;
+            }
+          }.bind(this));
+        },
+        ready: function () {
+          var po;
+          this.checkHash(hash);
+          global.addEventListener("hashchange", function () {
+            this.checkHash(global.location.hash);
+          }.bind(this), false);
+
+          po = global.document.createElement('script');
+          po.type = 'text/javascript';
+          po.async = true;
+          po.src = 'https://apis.google.com/js/platform.js?onload=onLoadCallback';
+          global.onLoadCallback = function () {
+            var object = this.prerender();
+            global.gapi.hangout.render(object, {
+              'render': 'createhangout',
+              'initial_apps': [{ app_id : '301008685962', 'app_type': 'LOCAL_APP' }],
+              'hangout_type': 'onair',
+              'widget_size': 175
+            });
+            this.postrender(object, 'start_hangout_onair');
+
+            object = this.prerender();
+            global.gapi.hangout.render(object, {
+              'render': 'createhangout',
+              'initial_apps': [{ app_id : '301008685962', 'app_type': 'LOCAL_APP' }],
+              'widget_size': 175
+            });
+            this.postrender(object, 'start_hangout');
+          }.bind(this);
+          global.document.head.appendChild(po);
+        }
+      });
+    }(this));
+  </script>
+</polymer-element>
